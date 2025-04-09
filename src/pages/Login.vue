@@ -26,6 +26,7 @@ import { authService } from "../services/authService.js";
 import AuthLayout from "../layouts/AuthLayout.vue";
 
 export default {
+  name: "Login",
   components: { AuthLayout },
   setup() {
     const email = ref("");
@@ -38,11 +39,22 @@ export default {
       try {
         loading.value = true;
         error.value = "";
+
+        // 1. Realizar login y guardar token
+        const response = await authService.login(email.value, password.value);
+        const token = response.data.access_token;
+        localStorage.setItem("token", token);
         
-        const token = await authService.login(email.value, password.value);
-        localStorage.setItem("token", token); // Guardar token en localStorage
+        // 2. Obtener datos del usuario
+        const userResponse = await authService.getCurrentUser();
+        const user = userResponse.data;
         
-        router.push("/dashboard"); // Redirigir tras login exitoso
+        // 3. Redirigir según el rol
+        if (user.rol?.id_rol === 1) {
+          router.push("/dashboard");
+        } else {
+          router.push("/user-view");
+        }
       } catch (err) {
         error.value = err.response?.data?.detail || "Error al iniciar sesión";
       } finally {

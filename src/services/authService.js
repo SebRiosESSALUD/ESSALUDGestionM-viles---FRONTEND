@@ -1,27 +1,24 @@
+// authService.js
 import axios from "axios";
 
-const API_URL = "http://127.0.0.1:8000"; // Asegúrate de que sea la URL correcta
+const API_URL = "http://127.0.0.1:8000";
 
 export const authService = {
   async login(email, password) {
-    try {
-      // FastAPI espera application/x-www-form-urlencoded, por eso usamos URLSearchParams
-      const formData = new URLSearchParams();
-      formData.append("username", email);  // FastAPI usa "username", no "email"
-      formData.append("password", password);
+    // Usamos URLSearchParams para enviar los datos en formato x-www-form-urlencoded
+    const params = new URLSearchParams({ username: email, password: password });
+    return axios.post(`${API_URL}/usuarios/login`, params);
+  },
 
-      const response = await axios.post(`${API_URL}/usuarios/login`, formData, {
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      });
+  async getCurrentUser() {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("No hay token guardado");
 
-      if (response.data.access_token) {
-        localStorage.setItem("token", response.data.access_token);
+    return axios.get(`${API_URL}/usuarios/me`, {
+      headers: {
+        Authorization: `Bearer ${token}`
       }
-
-      return response.data;
-    } catch (error) {
-      throw error.response?.data?.detail || "Error en el login";
-    }
+    });
   },
 
   logout() {
