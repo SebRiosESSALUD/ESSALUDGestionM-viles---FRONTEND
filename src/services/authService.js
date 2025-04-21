@@ -5,9 +5,18 @@ const API_URL = "http://127.0.0.1:8000";
 
 export const authService = {
   async login(email, password) {
-    // Usamos URLSearchParams para enviar los datos en formato x-www-form-urlencoded
-    const params = new URLSearchParams({ username: email, password: password });
-    return axios.post(`${API_URL}/usuarios/login`, params);
+    const params = new URLSearchParams({ username: email, password });
+    const response = await axios.post(`${API_URL}/usuarios/login`, params);
+
+    // Extrae los datos de la respuesta
+    const { access_token, id_rol, nombre_rol } = response.data;
+
+    // Guárdalos en localStorage
+    localStorage.setItem("token", access_token);
+    localStorage.setItem("userRole", nombre_rol);     // <-- aquí
+    localStorage.setItem("userRoleId", id_rol.toString());
+
+    return response;
   },
 
   async getCurrentUser() {
@@ -15,13 +24,13 @@ export const authService = {
     if (!token) throw new Error("No hay token guardado");
 
     return axios.get(`${API_URL}/usuarios/me`, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
+      headers: { Authorization: `Bearer ${token}` }
     });
   },
 
   logout() {
     localStorage.removeItem("token");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("userRoleId");
   }
 };
