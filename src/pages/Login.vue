@@ -36,26 +36,26 @@ export default {
     const router = useRouter();
 
     const handleLogin = async () => {
+      loading.value = true;
+      error.value = "";
       try {
-        loading.value = true;
-        error.value = "";
-
-        // 1. Realizar login y guardar token
+        // 1. Realizar login y guardar token + rol
         const response = await authService.login(email.value, password.value);
-        const token = response.data.access_token;
-        localStorage.setItem("token", token);
-        
-        // 2. Obtener datos del usuario
-        const userResponse = await authService.getCurrentUser();
-        const user = userResponse.data;
-        
-        // 3. Redirigir según el rol
-        if (user.rol?.id_rol === 1) {
-          router.push("/dashboard");
+        const { access_token, id_rol, nombre_rol } = response.data;
+        localStorage.setItem('token', access_token);
+        localStorage.setItem('userRole', nombre_rol);
+        localStorage.setItem('userRoleId', id_rol.toString());
+
+        // 2. Redirigir según el rol devuelto
+        if (id_rol === 1) {
+          router.push('/dashboard');
+        } else if (id_rol === 2) {
+          router.push('/dashboard'); // Gestor también al dashboard
         } else {
-          router.push("/user-view");
+          router.push('/user-view');
         }
       } catch (err) {
+        console.error(err);
         error.value = err.response?.data?.detail || "Error al iniciar sesión";
       } finally {
         loading.value = false;
@@ -63,6 +63,6 @@ export default {
     };
 
     return { email, password, error, loading, handleLogin };
-  }
+  },
 };
 </script>

@@ -9,12 +9,12 @@ const routes = [
   { 
     path: "/dashboard", 
     component: Dashboard, 
-    meta: { requiresAuth: true, role: 1 } // Solo para administradores
+    meta: { requiresAuth: true, roles: [1, 2] } // Acceso para Admin (1) y Gestor (2)
   },
   { 
     path: "/user-view", 
     component: UserView, 
-    meta: { requiresAuth: true } 
+    meta: { requiresAuth: true }
   },
 ];
 
@@ -23,12 +23,22 @@ const router = createRouter({
   routes,
 });
 
-// Navigation guard para proteger las rutas que requieren autenticación
+// Guard de navegación para proteger las rutas y aplicar control de roles
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem("token");
+  const roleId = parseInt(localStorage.getItem("userRoleId") || "0", 10);
+
+  // Si la ruta requiere autenticación y no hay token, redirigir a login
   if (to.meta.requiresAuth && !token) {
     return next({ path: "/login" });
   }
+
+  // Si la ruta define roles y el usuario no pertenece, redirigir o mostrar mensaje
+  if (to.meta.roles && !to.meta.roles.includes(roleId)) {
+    // Aquí podrías redirigir a una página de "Sin permiso" o al login
+    return next({ path: "/login" });
+  }
+
   next();
 });
 
